@@ -105,11 +105,34 @@
         }
 
         .network-topology {
-            display: grid;
-            grid-template-columns: 1fr 2fr 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 30px;
             margin-bottom: 30px;
             position: relative;
+        }
+
+        .top-section {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            gap: 20px;
+            align-items: start;
+        }
+
+        @media (max-width: 1400px) {
+            .top-section {
+                grid-template-columns: 250px 1fr 250px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .top-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .switch-panel:last-child {
+                order: 3;
+            }
         }
 
         .switch-panel {
@@ -173,6 +196,11 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            transition: gap 0.5s ease;
+        }
+
+        .hosts-container.migrating {
+            gap: 180px;
         }
 
         .host {
@@ -369,32 +397,125 @@
 
         .vmotion-transfer {
             position: absolute;
-            top: 50%;
+            top: 55%;
             left: 0;
             right: 0;
             transform: translateY(-50%);
-            display: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
         }
 
         .vmotion-transfer.active {
-            display: block;
+            opacity: 1;
         }
 
-        .transfer-line {
+        .transfer-header {
+            text-align: center;
+            color: #fbbf24;
+            font-weight: bold;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .transfer-progress-container {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .transfer-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            color: #666;
+        }
+
+        .transfer-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #f59e0b;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #888;
+        }
+
+        .progress-bar-container {
             position: relative;
-            height: 3px;
-            background: rgba(251, 191, 36, 0.3);
-            margin: 10px 0;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%);
+            border-radius: 15px;
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+            box-shadow: 0 2px 10px rgba(245, 158, 11, 0.5);
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, 
+                transparent, 
+                rgba(255, 255, 255, 0.3), 
+                transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-weight: bold;
+            color: white;
+            font-size: 0.9em;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .progress-label {
+            text-align: center;
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 500;
         }
 
         .memory-packet {
             position: absolute;
-            width: 15px;
-            height: 15px;
+            width: 12px;
+            height: 12px;
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             border-radius: 50%;
-            box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.8);
             animation: transferPacket 1.5s linear infinite;
+            top: -25px;
         }
 
         @keyframes transferPacket {
@@ -582,157 +703,176 @@
         </div>
 
         <div class="network-topology">
-            <div class="switch-panel">
-                <div class="switch-title">🔌 Prod_DSwitch-DVUplinks</div>
-                
-                <div class="port-group">
-                    <div class="pg-header">📡 MGMT-PG</div>
-                    <div class="pg-item">
-                        <span class="port-indicator"></span>
-                        VMkernel 포트 (4)
+            <div class="top-section">
+                <div class="switch-panel">
+                    <div class="switch-title">🔌 Prod_DSwitch-DVUplinks</div>
+                    
+                    <div class="port-group">
+                        <div class="pg-header">📡 MGMT-PG</div>
+                        <div class="pg-item">
+                            <span class="port-indicator"></span>
+                            VMkernel 포트 (4)
+                        </div>
                     </div>
-                </div>
 
-                <div class="port-group">
-                    <div class="pg-header">🌐 VMnet-PG</div>
-                    <div class="pg-item">
-                        <span class="port-indicator"></span>
-                        VCSA
+                    <div class="port-group">
+                        <div class="pg-header">🌐 VMnet-PG</div>
+                        <div class="pg-item">
+                            <span class="port-indicator"></span>
+                            VCSA
+                        </div>
+                        <div class="pg-item">
+                            <span class="port-indicator"></span>
+                            Win2k22-Mem01/02/03
+                        </div>
                     </div>
-                    <div class="pg-item">
-                        <span class="port-indicator"></span>
-                        Win2k22-Mem01/02/03
-                    </div>
-                </div>
 
-                <div class="port-group">
-                    <div class="pg-header">🚀 vMotion-PG</div>
-                    <div class="pg-item">
-                        <span class="port-indicator" style="background: #fbbf24;"></span>
-                        VMkernel 포트 (4)
-                    </div>
-                    <div class="pg-item" style="font-size: 0.75em; color: rgba(255,255,255,0.6);">
-                        20.20.20.111-114
-                    </div>
-                </div>
-            </div>
-
-            <div class="hosts-container">
-                <div class="host">
-                    <div class="host-header">
-                        <div class="host-title">📡 esxi-02.labshandson.lan</div>
-                        <div class="host-status" id="sourceStatus">⚡ 활성</div>
-                    </div>
-                    <div class="host-nics">
-                        <div class="nic nic-active">vmnic0 🟢</div>
-                        <div class="nic nic-active">vmnic1 🟢</div>
-                        <div class="nic nic-active">vmnic2 🟢</div>
-                        <div class="nic nic-active">vmnic3 🟢</div>
-                        <div class="nic nic-active" style="background: rgba(251, 191, 36, 0.3);">vmnic4 (vMotion) 🟡</div>
-                    </div>
-                    <div class="vm-container" id="sourceContainer">
-                        <div class="vm" id="vm">
-                            <div class="vm-header">
-                                <div class="vm-icon">💻</div>
-                                <div class="vm-info">
-                                    <div class="vm-name">Win2k22-Mem01</div>
-                                    <div class="vm-os">Windows Server 2022 (64-bit)</div>
-                                </div>
-                            </div>
-                            <div class="vm-metrics">
-                                <div class="metric">
-                                    CPU: <span class="metric-value">45%</span>
-                                </div>
-                                <div class="metric">
-                                    Memory: <span class="metric-value">8 GB</span>
-                                </div>
-                                <div class="metric">
-                                    Network: <span class="metric-value">125 Mbps</span>
-                                </div>
-                                <div class="metric">
-                                    Disk: <span class="metric-value">80 GB</span>
-                                </div>
-                            </div>
-                            <div class="vm-status">
-                                <div class="status-indicator"></div>
-                                <span>서비스 실행 중 - 사용자 연결됨</span>
-                            </div>
-                            <div class="processing" id="processing">
-                                <div class="spinner"></div>
-                                <span>메모리 전송 중...</span>
-                            </div>
+                    <div class="port-group">
+                        <div class="pg-header">🚀 vMotion-PG</div>
+                        <div class="pg-item">
+                            <span class="port-indicator" style="background: #fbbf24;"></span>
+                            VMkernel 포트 (4)
+                        </div>
+                        <div class="pg-item" style="font-size: 0.75em; color: rgba(255,255,255,0.6);">
+                            20.20.20.111-114
                         </div>
                     </div>
                 </div>
 
-                <div class="vmotion-transfer" id="vmotionTransfer">
-                    <div style="text-align: center; color: #fbbf24; font-weight: bold; font-size: 0.9em; margin-bottom: 5px;">
-                        ⚡ vMotion 네트워크 (20.20.20.x)
+                <div class="hosts-container">
+                    <div class="host">
+                        <div class="host-header">
+                            <div class="host-title">📡 esxi-02.labshandson.lan</div>
+                            <div class="host-status" id="sourceStatus">⚡ 활성</div>
+                        </div>
+                        <div class="host-nics">
+                            <div class="nic nic-active">vmnic0 🟢</div>
+                            <div class="nic nic-active">vmnic1 🟢</div>
+                            <div class="nic nic-active">vmnic2 🟢</div>
+                            <div class="nic nic-active">vmnic3 🟢</div>
+                            <div class="nic nic-active" style="background: rgba(251, 191, 36, 0.3);">vmnic4 (vMotion) 🟡</div>
+                        </div>
+                        <div class="vm-container" id="sourceContainer">
+                            <div class="vm" id="vm">
+                                <div class="vm-header">
+                                    <div class="vm-icon">💻</div>
+                                    <div class="vm-info">
+                                        <div class="vm-name">Win2k22-Mem01</div>
+                                        <div class="vm-os">Windows Server 2022 (64-bit)</div>
+                                    </div>
+                                </div>
+                                <div class="vm-metrics">
+                                    <div class="metric">
+                                        CPU: <span class="metric-value">45%</span>
+                                    </div>
+                                    <div class="metric">
+                                        Memory: <span class="metric-value">8 GB</span>
+                                    </div>
+                                    <div class="metric">
+                                        Network: <span class="metric-value">125 Mbps</span>
+                                    </div>
+                                    <div class="metric">
+                                        Disk: <span class="metric-value">80 GB</span>
+                                    </div>
+                                </div>
+                                <div class="vm-status">
+                                    <div class="status-indicator"></div>
+                                    <span>서비스 실행 중 - 사용자 연결됨</span>
+                                </div>
+                                <div class="processing" id="processing">
+                                    <div class="spinner"></div>
+                                    <span>메모리 전송 중...</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="transfer-line">
-                        <div class="memory-packet"></div>
-                        <div class="memory-packet"></div>
-                        <div class="memory-packet"></div>
-                        <div class="memory-packet"></div>
-                        <div class="memory-packet"></div>
+
+                    <div class="vmotion-transfer" id="vmotionTransfer">
+                        <div class="transfer-header">
+                            ⚡ vMotion 네트워크 (20.20.20.x) - 메모리 전송 중
+                        </div>
+                        <div class="transfer-progress-container">
+                            <div class="transfer-stats">
+                                <div class="transfer-stat">
+                                    <div class="stat-value" id="transferSpeed">0 MB/s</div>
+                                    <div class="stat-label">전송 속도</div>
+                                </div>
+                                <div class="transfer-stat">
+                                    <div class="stat-value" id="transferredData">0 MB</div>
+                                    <div class="stat-label">전송 완료</div>
+                                </div>
+                                <div class="transfer-stat">
+                                    <div class="stat-value" id="remainingData">8192 MB</div>
+                                    <div class="stat-label">남은 용량</div>
+                                </div>
+                            </div>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" id="progressBar" style="width: 0%;">
+                                    <span class="progress-text" id="progressText">0%</span>
+                                    <div class="memory-packet"></div>
+                                    <div class="memory-packet"></div>
+                                    <div class="memory-packet"></div>
+                                    <div class="memory-packet"></div>
+                                    <div class="memory-packet"></div>
+                                </div>
+                            </div>
+                            <div class="progress-label" id="progressLabel">사전 메모리 복사 준비 중...</div>
+                        </div>
                     </div>
-                    <div style="text-align: center; color: #666; font-size: 0.85em; margin-top: 5px;">
-                        📦 메모리 페이지 실시간 전송
+
+                    <div class="host">
+                        <div class="host-header">
+                            <div class="host-title">🎯 esxi-03.labshandson.lan</div>
+                            <div class="host-status" id="targetStatus">⏳ 대기</div>
+                        </div>
+                        <div class="host-nics">
+                            <div class="nic nic-active">vmnic0 🟢</div>
+                            <div class="nic nic-active">vmnic1 🟢</div>
+                            <div class="nic nic-active">vmnic2 🟢</div>
+                            <div class="nic nic-active">vmnic3 🟢</div>
+                            <div class="nic nic-active" style="background: rgba(251, 191, 36, 0.3);">vmnic5 (vMotion) 🟡</div>
+                        </div>
+                        <div class="vm-container" id="targetContainer">
+                            <div class="empty-slot">마이그레이션 대기 중</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="host">
-                    <div class="host-header">
-                        <div class="host-title">🎯 esxi-03.labshandson.lan</div>
-                        <div class="host-status" id="targetStatus">⏳ 대기</div>
+                <div class="switch-panel">
+                    <div class="switch-title">👥 연결된 클라이언트</div>
+                    
+                    <div class="clients">
+                        <div class="client">
+                            <div class="client-icon">👤</div>
+                            <div style="font-size: 0.9em; margin: 5px 0;">사용자 A</div>
+                            <div class="client-status">
+                                <span class="status-indicator" style="width: 8px; height: 8px;"></span>
+                                연결됨
+                            </div>
+                        </div>
+                        <div class="client">
+                            <div class="client-icon">👤</div>
+                            <div style="font-size: 0.9em; margin: 5px 0;">사용자 B</div>
+                            <div class="client-status">
+                                <span class="status-indicator" style="width: 8px; height: 8px;"></span>
+                                연결됨
+                            </div>
+                        </div>
+                        <div class="client">
+                            <div class="client-icon">👤</div>
+                            <div style="font-size: 0.9em; margin: 5px 0;">사용자 C</div>
+                            <div class="client-status">
+                                <span class="status-indicator" style="width: 8px; height: 8px;"></span>
+                                연결됨
+                            </div>
+                        </div>
                     </div>
-                    <div class="host-nics">
-                        <div class="nic nic-active">vmnic0 🟢</div>
-                        <div class="nic nic-active">vmnic1 🟢</div>
-                        <div class="nic nic-active">vmnic2 🟢</div>
-                        <div class="nic nic-active">vmnic3 🟢</div>
-                        <div class="nic nic-active" style="background: rgba(251, 191, 36, 0.3);">vmnic5 (vMotion) 🟡</div>
-                    </div>
-                    <div class="vm-container" id="targetContainer">
-                        <div class="empty-slot">마이그레이션 대기 중</div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="switch-panel">
-                <div class="switch-title">👥 연결된 클라이언트</div>
-                
-                <div class="clients">
-                    <div class="client">
-                        <div class="client-icon">👤</div>
-                        <div style="font-size: 0.9em; margin: 5px 0;">사용자 A</div>
-                        <div class="client-status">
-                            <span class="status-indicator" style="width: 8px; height: 8px;"></span>
-                            연결됨
-                        </div>
+                    <div style="margin-top: 20px; padding: 15px; background: rgba(74, 222, 128, 0.2); border-radius: 8px; font-size: 0.85em;">
+                        <div style="font-weight: bold; margin-bottom: 5px;">📊 실시간 트래픽</div>
+                        <div>VMnet-PG를 통한</div>
+                        <div>연속적인 데이터 통신</div>
                     </div>
-                    <div class="client">
-                        <div class="client-icon">👤</div>
-                        <div style="font-size: 0.9em; margin: 5px 0;">사용자 B</div>
-                        <div class="client-status">
-                            <span class="status-indicator" style="width: 8px; height: 8px;"></span>
-                            연결됨
-                        </div>
-                    </div>
-                    <div class="client">
-                        <div class="client-icon">👤</div>
-                        <div style="font-size: 0.9em; margin: 5px 0;">사용자 C</div>
-                        <div class="client-status">
-                            <span class="status-indicator" style="width: 8px; height: 8px;"></span>
-                            연결됨
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 20px; padding: 15px; background: rgba(74, 222, 128, 0.2); border-radius: 8px; font-size: 0.85em;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">📊 실시간 트래픽</div>
-                    <div>VMnet-PG를 통한</div>
-                    <div>연속적인 데이터 통신</div>
                 </div>
             </div>
         </div>
@@ -768,6 +908,7 @@
 
     <script>
         let isMigrating = false;
+        let progressInterval;
 
         function updateTimeline(step) {
             for (let i = 1; i <= 5; i++) {
@@ -781,6 +922,51 @@
             }
         }
 
+        function animateProgress(targetPercent, duration, label, speedRange) {
+            return new Promise((resolve) => {
+                const progressBar = document.getElementById('progressBar');
+                const progressText = document.getElementById('progressText');
+                const progressLabel = document.getElementById('progressLabel');
+                const transferSpeed = document.getElementById('transferSpeed');
+                const transferredData = document.getElementById('transferredData');
+                const remainingData = document.getElementById('remainingData');
+                
+                const startPercent = parseInt(progressBar.style.width) || 0;
+                const totalMemory = 8192; // 8 GB in MB
+                const steps = 60;
+                const stepDuration = duration / steps;
+                const percentPerStep = (targetPercent - startPercent) / steps;
+                
+                let currentStep = 0;
+                progressLabel.textContent = label;
+                
+                progressInterval = setInterval(() => {
+                    currentStep++;
+                    const currentPercent = startPercent + (percentPerStep * currentStep);
+                    
+                    progressBar.style.width = currentPercent + '%';
+                    progressText.textContent = Math.round(currentPercent) + '%';
+                    
+                    // 전송 속도 업데이트 (랜덤 변동)
+                    const speed = Math.round(speedRange[0] + Math.random() * (speedRange[1] - speedRange[0]));
+                    transferSpeed.textContent = speed + ' MB/s';
+                    
+                    // 전송 완료 용량
+                    const transferred = Math.round((totalMemory * currentPercent) / 100);
+                    transferredData.textContent = transferred + ' MB';
+                    
+                    // 남은 용량
+                    const remaining = totalMemory - transferred;
+                    remainingData.textContent = remaining + ' MB';
+                    
+                    if (currentStep >= steps) {
+                        clearInterval(progressInterval);
+                        resolve();
+                    }
+                }, stepDuration);
+            });
+        }
+
         async function startMigration() {
             if (isMigrating) return;
             
@@ -792,6 +978,7 @@
             const processing = document.getElementById('processing');
             const sourceStatus = document.getElementById('sourceStatus');
             const targetStatus = document.getElementById('targetStatus');
+            const hostsContainer = document.querySelector('.hosts-container');
             
             migrateBtn.disabled = true;
 
@@ -802,28 +989,32 @@
             targetStatus.textContent = '🔍 호환성 확인 중';
             await sleep(1800);
 
-            // 단계 2: 메모리 사전 복사
-            updateTimeline(2);
-            status.textContent = '📦 메모리 사전 복사: vmnic4 → vmnic5 (vMotion-PG 20.20.20.x) - VM은 계속 실행';
+            // 호스트 간격 넓히기 및 전송 바 표시
+            hostsContainer.classList.add('migrating');
             vmotionTransfer.classList.add('active');
             processing.classList.add('active');
+            await sleep(500);
+
+            // 단계 2: 메모리 사전 복사 (0% -> 75%)
+            updateTimeline(2);
+            status.textContent = '📦 메모리 사전 복사: vmnic4 → vmnic5 (vMotion-PG) - VM은 계속 실행 중';
             sourceStatus.textContent = '⚡ 활성 - 메모리 복사 중';
             targetStatus.textContent = '📦 메모리 수신 중';
-            await sleep(2500);
+            await animateProgress(75, 2500, '📦 전체 메모리 페이지를 대상 호스트로 복사 중...', [850, 1200]);
 
-            // 단계 3: 증분 메모리 동기화
+            // 단계 3: 증분 메모리 동기화 (75% -> 95%)
             updateTimeline(3);
             status.textContent = '⚡ 증분 동기화: 변경된 메모리 페이지만 실시간 전송 - 사용자 연결 유지!';
             sourceStatus.textContent = '⚡ 활성 - 증분 전송';
             targetStatus.textContent = '⚡ 메모리 동기화 중';
-            await sleep(2500);
+            await animateProgress(95, 2500, '⚡ 수정된 메모리 페이지만 증분 동기화 중... (Delta Sync)', [450, 650]);
 
-            // 단계 4: 빠른 전환 (Switchover)
+            // 단계 4: 빠른 전환 (95% -> 100%)
             updateTimeline(4);
             status.textContent = '🔄 Switchover: VM 상태 전환 (약 100ms) - VMnet-PG 통해 네트워크 재연결';
             sourceStatus.textContent = '⏸️ 전환 중 (100ms)';
             targetStatus.textContent = '🔄 VM 활성화 중';
-            await sleep(1800);
+            await animateProgress(100, 1800, '🔄 최종 메모리 상태 전환 및 네트워크 재구성... (Switchover)', [200, 350]);
 
             // 단계 5: 완료
             updateTimeline(5);
@@ -831,11 +1022,20 @@
             sourceStatus.textContent = '✅ 마이그레이션 완료';
             targetStatus.textContent = '⚡ 활성 - VM 실행 중';
             
+            document.getElementById('progressLabel').textContent = '✅ 메모리 전송 완료 - VM이 새 호스트에서 실행 중';
+            
+            await sleep(1000);
+            
             // VM을 대상 호스트로 이동
             const targetContainer = document.getElementById('targetContainer');
             const sourceContainer = document.getElementById('sourceContainer');
             
+            // 페이드 아웃
             vmotionTransfer.classList.remove('active');
+            await sleep(500);
+            
+            // 호스트 간격 좁히기
+            hostsContainer.classList.remove('migrating');
             processing.classList.remove('active');
             
             // 소스 컨테이너 비우기
@@ -852,6 +1052,10 @@
         function resetMigration() {
             if (isMigrating) return;
             
+            if (progressInterval) {
+                clearInterval(progressInterval);
+            }
+            
             const vm = document.getElementById('vm');
             const sourceContainer = document.getElementById('sourceContainer');
             const targetContainer = document.getElementById('targetContainer');
@@ -860,6 +1064,9 @@
             const processing = document.getElementById('processing');
             const sourceStatus = document.getElementById('sourceStatus');
             const targetStatus = document.getElementById('targetStatus');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const progressLabel = document.getElementById('progressLabel');
             
             // 타임라인 초기화
             updateTimeline(0);
@@ -868,6 +1075,14 @@
             status.textContent = '\'vMotion 시작\' 버튼을 눌러 무중단 Live Migration을 시작하세요';
             sourceStatus.textContent = '⚡ 활성';
             targetStatus.textContent = '⏳ 대기';
+            
+            // 진행률 초기화
+            progressBar.style.width = '0%';
+            progressText.textContent = '0%';
+            progressLabel.textContent = '사전 메모리 복사 준비 중...';
+            document.getElementById('transferSpeed').textContent = '0 MB/s';
+            document.getElementById('transferredData').textContent = '0 MB';
+            document.getElementById('remainingData').textContent = '8192 MB';
             
             // VM을 소스로 되돌리기
             sourceContainer.innerHTML = '';
